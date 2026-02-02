@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HVPT – Harry's To Do List</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            background: #ddd;
+            border-radius: 999px;
+            height: 12px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4caf50, #81c784);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Add task */
+        .add-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .add-row input {
+            flex: 1;
+            padding: 0.6rem 0.8rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-row input:focus { border-color: #4caf50; }
+
+        .add-row button {
+            padding: 0.6rem 1.2rem;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-row button:hover { background: #43a047; }
+
+        /* Category sections */
+        .category {
+            margin-bottom: 1.25rem;
+        }
+
+        .category-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            margin-bottom: 0.4rem;
+            padding-left: 0.25rem;
+        }
+
+        /* Task items */
+        .task {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            margin-bottom: 0.4rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: opacity 0.3s;
+        }
+
+        .task.done { opacity: 0.55; }
+
+        .task input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            accent-color: #4caf50;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .task-label {
+            flex: 1;
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .task.done .task-label {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .task .delete-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 0.3rem;
+            transition: color 0.2s;
+        }
+
+        .task .delete-btn:hover { color: #e53935; }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .filters button {
+            padding: 0.35rem 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 999px;
+            background: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filters button.active {
+            background: #4caf50;
+            color: #fff;
+            border-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Harry's HVPT To Do List</h1>
+        <p class="subtitle">Tick off each activity to track your progress</p>
+
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <p class="progress-text" id="progressText">0 / 0 completed</p>
+
+        <div class="filters">
+            <button class="active" data-filter="all">All</button>
+            <button data-filter="active">To Do</button>
+            <button data-filter="done">Done</button>
+        </div>
+
+        <div class="add-row">
+            <input type="text" id="newTask" placeholder="Add a new task…" />
+            <button id="addBtn">Add</button>
+        </div>
+
+        <div id="list"></div>
+    </div>
+
+    <script>
+        // Default starter tasks grouped by category
+        const DEFAULT_TASKS = [
+            { text: "Read the HVPT welcome guide",            cat: "Getting Started", done: false },
+            { text: "Set up development environment",         cat: "Getting Started", done: false },
+            { text: "Join the HVPT team channel",             cat: "Getting Started", done: false },
+
+            { text: "Review the project brief & requirements",cat: "Planning", done: false },
+            { text: "Map out key milestones",                 cat: "Planning", done: false },
+            { text: "Identify first deliverable",             cat: "Planning", done: false },
+
+            { text: "Create initial project structure",       cat: "Development", done: false },
+            { text: "Build a basic prototype / proof of concept", cat: "Development", done: false },
+            { text: "Write first unit test",                  cat: "Development", done: false },
+            { text: "Connect to any required APIs or data sources", cat: "Development", done: false },
+
+            { text: "Commit & push first piece of working code", cat: "Progress & Review", done: false },
+            { text: "Demo progress to the team",              cat: "Progress & Review", done: false },
+            { text: "Collect feedback and note action items",  cat: "Progress & Review", done: false },
+            { text: "Update documentation with latest changes",cat: "Progress & Review", done: false },
+        ];
+
+        const STORAGE_KEY = "hvpt-todo-list";
+
+        // ---- State ----
+        let tasks = loadTasks();
+        let filter = "all";
+
+        function loadTasks() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (_) {}
+            return DEFAULT_TASKS.map((t, i) => ({ id: Date.now() + i, ...t }));
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        // ---- Render ----
+        function render() {
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+
+            const visible = tasks.filter(t =>
+                filter === "all" ? true : filter === "done" ? t.done : !t.done
+            );
+
+            // Group by category
+            const groups = {};
+            visible.forEach(t => {
+                const cat = t.cat || "Other";
+                (groups[cat] = groups[cat] || []).push(t);
+            });
+
+            for (const [cat, items] of Object.entries(groups)) {
+                const section = document.createElement("div");
+                section.className = "category";
+                section.innerHTML = `<div class="category-title">${cat}</div>`;
+                items.forEach(t => {
+                    const row = document.createElement("div");
+                    row.className = "task" + (t.done ? " done" : "");
+                    row.innerHTML = `
+                        <input type="checkbox" ${t.done ? "checked" : ""} data-id="${t.id}" />
+                        <span class="task-label" data-id="${t.id}">${escapeHtml(t.text)}</span>
+                        <button class="delete-btn" data-id="${t.id}">&times;</button>`;
+                    section.appendChild(row);
+                });
+                list.appendChild(section);
+            }
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = tasks.length;
+            const done = tasks.filter(t => t.done).length;
+            const pct = total ? Math.round((done / total) * 100) : 0;
+            document.getElementById("progressBar").style.width = pct + "%";
+            document.getElementById("progressText").textContent = `${done} / ${total} completed (${pct}%)`;
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement("div");
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        // ---- Events ----
+        document.getElementById("list").addEventListener("change", e => {
+            if (e.target.type === "checkbox") {
+                const id = Number(e.target.dataset.id);
+                const t = tasks.find(t => t.id === id);
+                if (t) { t.done = e.target.checked; save(); render(); }
+            }
+        });
+
+        document.getElementById("list").addEventListener("click", e => {
+            if (e.target.classList.contains("delete-btn")) {
+                const id = Number(e.target.dataset.id);
+                tasks = tasks.filter(t => t.id !== id);
+                save(); render();
+            }
+            if (e.target.classList.contains("task-label")) {
+                const id = Number(e.target.dataset.id);
+                const t = tasks.find(t => t.id === id);
+                if (t) { t.done = !t.done; save(); render(); }
+            }
+        });
+
+        function addTask() {
+            const input = document.getElementById("newTask");
+            const text = input.value.trim();
+            if (!text) return;
+            tasks.push({ id: Date.now(), text, cat: "My Tasks", done: false });
+            input.value = "";
+            save(); render();
+        }
+
+        document.getElementById("addBtn").addEventListener("click", addTask);
+        document.getElementById("newTask").addEventListener("keydown", e => {
+            if (e.key === "Enter") addTask();
+        });
+
+        document.querySelector(".filters").addEventListener("click", e => {
+            if (e.target.tagName !== "BUTTON") return;
+            filter = e.target.dataset.filter;
+            document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
+            e.target.classList.add("active");
+            render();
+        });
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
