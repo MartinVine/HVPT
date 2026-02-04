@@ -8,7 +8,7 @@ interface ServiceDetailsProps {
   onServiceClick: (service: Service) => void;
 }
 
-export function ServiceDetails({ service, onBack, onAnalyzeIncident, onServiceClick }: ServiceDetailsProps) {
+export function ServiceDetails({ service, onBack, onAnalyzeIncident, onServiceClick: _onServiceClick }: ServiceDetailsProps) {
   return (
     <div className="service-details">
       <div className="details-header">

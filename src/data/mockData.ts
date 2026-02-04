@@ -1,4 +1,4 @@
-import { Service, ApplicationStack, Team, Contact } from '../types';
+import { Service, ApplicationStack, Team } from '../types';
 
 // Teams
 const platformTeam: Team = {

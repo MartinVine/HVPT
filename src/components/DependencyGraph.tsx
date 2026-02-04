@@ -44,7 +44,7 @@ export function DependencyGraph({ onServiceClick, onBack }: DependencyGraphProps
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [selectedNode, _setSelectedNode] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'all' | 'tier-1' | 'unhealthy'>('all');
 
